@@ -143,18 +143,43 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     
     if (classificationResponse.data) {
       // Ensure predictions is always an array
+      // Fix for the ECG Classification model: swap width and height to match other models
+      const originalData = classificationResponse.data;
+      
       results.ecgClassification = {
-        ...classificationResponse.data,
+        ...originalData,
         model: "ECG Classification",
-        predictions: Array.isArray(classificationResponse.data.predictions) 
-          ? classificationResponse.data.predictions 
+        // Swap width and height in the image object to be consistent with other models
+        image: originalData.image ? {
+          width: originalData.image.height,
+          height: originalData.image.width
+        } : originalData.image,
+        predictions: Array.isArray(originalData.predictions) 
+          ? originalData.predictions.map(prediction => {
+              // If prediction contains x, y, width, height coordinates, swap them too
+              if (prediction.x !== undefined && prediction.y !== undefined) {
+                // Swap x and y
+                const tempX = prediction.x;
+                prediction.x = prediction.y;
+                prediction.y = tempX;
+              }
+              
+              if (prediction.width !== undefined && prediction.height !== undefined) {
+                // Swap width and height
+                const tempWidth = prediction.width;
+                prediction.width = prediction.height;
+                prediction.height = tempWidth;
+              }
+              
+              return prediction;
+            })
           : []
       };
       
-      // Standardize image dimensions if needed
+      // Log the corrected dimensions
       if (results.ecgClassification.image) {
-        // Store original dimensions for reference
-        console.log("Classification image dimensions:", 
+        // Store corrected dimensions for reference
+        console.log("Classification image dimensions (corrected):", 
           results.ecgClassification.image.width, 
           results.ecgClassification.image.height
         );
@@ -213,3 +238,4 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     };
   }
 };
+
