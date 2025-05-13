@@ -5,8 +5,8 @@ import { toast } from "sonner";
 // Constants for the API endpoints
 const ECG_DETECTION_URL = "https://serverless.roboflow.com/ecg-detection/3";
 const ARRHYTHMIA_DETECTION_URL = "https://serverless.roboflow.com/arrhythmia_detection/1";
-const ECG_CLASSIFICATION_URL = "https://serverless.roboflow.com/ecg-classif/1";
 const MODEL_VBBKZ_URL = "https://serverless.roboflow.com/model-vbbkz/2";
+const MODEL_7N51B_URL = "https://serverless.roboflow.com/model-7n51b/1"; // New model replacing ECG Classification
 const API_KEY = "peg6MRNbP9N0Ko1S2p29";
 
 // Interface for the detection results
@@ -32,7 +32,7 @@ export interface DetectionResult {
 export interface CombinedResults {
   ecgDetection: DetectionResult | null;
   arrhythmiaDetection: DetectionResult | null;
-  ecgClassification: DetectionResult | null;
+  model7n51b: DetectionResult | null; // Changed from ecgClassification to model7n51b
   modelVbbkz: DetectionResult | null;
   hasError: boolean;
 }
@@ -46,7 +46,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     const results: CombinedResults = {
       ecgDetection: null,
       arrhythmiaDetection: null,
-      ecgClassification: null,
+      model7n51b: null, // Changed from ecgClassification to model7n51b
       modelVbbkz: null,
       hasError: false
     };
@@ -62,7 +62,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     };
     
     // Send requests to all four models in parallel and wait for all to complete
-    const [ecgResponse, arrhythmiaResponse, classificationResponse, vbbkzResponse] = await Promise.all([
+    const [ecgResponse, arrhythmiaResponse, model7n51bResponse, vbbkzResponse] = await Promise.all([
       axios({
         ...requestConfig,
         url: ECG_DETECTION_URL
@@ -83,10 +83,10 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       
       axios({
         ...requestConfig,
-        url: ECG_CLASSIFICATION_URL
+        url: MODEL_7N51B_URL // Changed from ECG_CLASSIFICATION_URL to MODEL_7N51B_URL
       }).catch(error => {
-        console.error("ECG Classification Error:", error);
-        toast.error("Error analyzing with ECG classification model");
+        console.error("Model 7n51b Error:", error); // Updated error message
+        toast.error("Error analyzing with Model 7n51b"); // Updated toast message
         return { data: null };
       }),
       
@@ -141,47 +141,22 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       }
     }
     
-    if (classificationResponse.data) {
+    if (model7n51bResponse.data) {
       // Ensure predictions is always an array
-      // Fix for the ECG Classification model: swap width and height to match other models
-      const originalData = classificationResponse.data;
-      
-      results.ecgClassification = {
-        ...originalData,
-        model: "ECG Classification",
-        // Swap width and height in the image object to be consistent with other models
-        image: originalData.image ? {
-          width: originalData.image.height,
-          height: originalData.image.width
-        } : originalData.image,
-        predictions: Array.isArray(originalData.predictions) 
-          ? originalData.predictions.map(prediction => {
-              // If prediction contains x, y, width, height coordinates, swap them too
-              if (prediction.x !== undefined && prediction.y !== undefined) {
-                // Swap x and y
-                const tempX = prediction.x;
-                prediction.x = prediction.y;
-                prediction.y = tempX;
-              }
-              
-              if (prediction.width !== undefined && prediction.height !== undefined) {
-                // Swap width and height
-                const tempWidth = prediction.width;
-                prediction.width = prediction.height;
-                prediction.height = tempWidth;
-              }
-              
-              return prediction;
-            })
+      results.model7n51b = {
+        ...model7n51bResponse.data,
+        model: "Model 7n51b",
+        predictions: Array.isArray(model7n51bResponse.data.predictions) 
+          ? model7n51bResponse.data.predictions 
           : []
       };
       
-      // Log the corrected dimensions
-      if (results.ecgClassification.image) {
-        // Store corrected dimensions for reference
-        console.log("Classification image dimensions (corrected):", 
-          results.ecgClassification.image.width, 
-          results.ecgClassification.image.height
+      // Standardize image dimensions if needed
+      if (results.model7n51b.image) {
+        // Store original dimensions for reference
+        console.log("Model 7n51b image dimensions:", 
+          results.model7n51b.image.width, 
+          results.model7n51b.image.height
         );
       }
     }
@@ -207,14 +182,14 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     }
     
     // Check if all requests failed
-    if (!results.ecgDetection && !results.arrhythmiaDetection && !results.ecgClassification && !results.modelVbbkz) {
+    if (!results.ecgDetection && !results.arrhythmiaDetection && !results.model7n51b && !results.modelVbbkz) {
       results.hasError = true;
       toast.error("Failed to analyze ECG with all models");
     } else {
       const successfulModels = [
         results.ecgDetection && "ECG Detection", 
         results.arrhythmiaDetection && "Arrhythmia Detection",
-        results.ecgClassification && "ECG Classification",
+        results.model7n51b && "Model 7n51b", // Updated model name
         results.modelVbbkz && "Model VBBKZ"
       ].filter(Boolean);
       
@@ -232,10 +207,9 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     return {
       ecgDetection: null,
       arrhythmiaDetection: null,
-      ecgClassification: null,
+      model7n51b: null, // Changed from ecgClassification to model7n51b
       modelVbbkz: null,
       hasError: true
     };
   }
 };
-

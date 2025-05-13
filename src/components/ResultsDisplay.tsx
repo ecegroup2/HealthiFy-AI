@@ -12,7 +12,7 @@ interface ResultsDisplayProps {
   results: {
     ecgDetection: DetectionResult | null;
     arrhythmiaDetection: DetectionResult | null;
-    ecgClassification: DetectionResult | null;
+    model7n51b: DetectionResult | null; // Changed from ecgClassification to model7n51b
     modelVbbkz: DetectionResult | null;
     hasError: boolean;
   };
@@ -21,7 +21,7 @@ interface ResultsDisplayProps {
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results }) => {
   const ecgCanvasRef = useRef<HTMLCanvasElement>(null);
   const arrhythmiaCanvasRef = useRef<HTMLCanvasElement>(null);
-  const classificationCanvasRef = useRef<HTMLCanvasElement>(null);
+  const model7n51bCanvasRef = useRef<HTMLCanvasElement>(null); // Changed from classificationCanvasRef
   const vbbkzCanvasRef = useRef<HTMLCanvasElement>(null);
   
   // Standardize canvas dimensions for all models
@@ -35,7 +35,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     // Make sure we have results from all models before rendering
     // or display what we have if at least one model has processed the image
     const hasAnyResult = results.ecgDetection || results.arrhythmiaDetection || 
-                        results.ecgClassification || results.modelVbbkz;
+                        results.model7n51b || results.modelVbbkz;
     if (!hasAnyResult) return;
     
     const image = new Image();
@@ -76,18 +76,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
         }
       }
       
-      // Draw classification results if available
-      if (results.ecgClassification && classificationCanvasRef.current) {
-        const ctx = classificationCanvasRef.current.getContext('2d');
+      // Draw Model 7n51b results if available
+      if (results.model7n51b && model7n51bCanvasRef.current) {
+        const ctx = model7n51bCanvasRef.current.getContext('2d');
         if (ctx) {
           // Ensure canvas has standard dimensions
-          classificationCanvasRef.current.width = standardWidth;
-          classificationCanvasRef.current.height = standardHeight;
+          model7n51bCanvasRef.current.width = standardWidth;
+          model7n51bCanvasRef.current.height = standardHeight;
           
           drawDetections(
             ctx,
             image,
-            results.ecgClassification.predictions,
+            results.model7n51b.predictions,
             standardWidth,
             standardHeight
           );
@@ -118,7 +118,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   
   // No results to display
   if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && 
-      !results.ecgClassification && !results.modelVbbkz)) {
+      !results.model7n51b && !results.modelVbbkz)) {
     return null;
   }
   
@@ -157,7 +157,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   const totalAbnormalities = 
     (results.ecgDetection?.predictions && Array.isArray(results.ecgDetection.predictions) ? results.ecgDetection.predictions.length : 0) + 
     (results.arrhythmiaDetection?.predictions && Array.isArray(results.arrhythmiaDetection.predictions) ? results.arrhythmiaDetection.predictions.length : 0) +
-    (results.ecgClassification?.predictions && Array.isArray(results.ecgClassification.predictions) ? results.ecgClassification.predictions.length : 0) +
+    (results.model7n51b?.predictions && Array.isArray(results.model7n51b.predictions) ? results.model7n51b.predictions.length : 0) +
     (results.modelVbbkz?.predictions && Array.isArray(results.modelVbbkz.predictions) ? results.modelVbbkz.predictions.length : 0);
   
   return (
@@ -209,11 +209,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                 </div>
               )}
               
-              {results.ecgClassification && (
+              {results.model7n51b && (
                 <div className="space-y-2 col-span-1">
-                  <h3 className="text-lg font-medium">ECG Classification</h3>
+                  <h3 className="text-lg font-medium">Model 7n51b</h3>
                   <canvas
-                    ref={classificationCanvasRef}
+                    ref={model7n51bCanvasRef}
                     width={standardWidth}
                     height={standardHeight}
                     className="w-full border rounded bg-white"
@@ -275,21 +275,21 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                 </div>
               )}
               
-              {results.ecgClassification && (
+              {results.model7n51b && (
                 <div>
-                  <h3 className="text-lg font-medium mb-2">ECG Classification Results</h3>
+                  <h3 className="text-lg font-medium mb-2">Model 7n51b Results</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Processing time:</span>
-                      <span>{results.ecgClassification.time.toFixed(2)} ms</span>
+                      <span>{results.model7n51b.time.toFixed(2)} ms</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Image dimensions:</span>
-                      <span>{results.ecgClassification.image.width}x{results.ecgClassification.image.height}</span>
+                      <span>{results.model7n51b.image.width}x{results.model7n51b.image.height}</span>
                     </div>
                     <Separator className="my-2" />
                     <h4 className="font-medium">Detected Abnormalities:</h4>
-                    {renderPredictionList(results.ecgClassification.predictions)}
+                    {renderPredictionList(results.model7n51b.predictions)}
                   </div>
                 </div>
               )}
@@ -321,7 +321,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   {totalAbnormalities} potential abnormalities detected across {[
                     results.ecgDetection && 'ECG Detection',
                     results.arrhythmiaDetection && 'Arrhythmia Detection',
-                    results.ecgClassification && 'ECG Classification',
+                    results.model7n51b && 'Model 7n51b',
                     results.modelVbbkz && 'Model VBBKZ'
                   ].filter(Boolean).join(', ')} models.
                 </p>
