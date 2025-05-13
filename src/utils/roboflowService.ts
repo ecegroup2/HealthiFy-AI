@@ -6,6 +6,7 @@ import { toast } from "sonner";
 const ECG_DETECTION_URL = "https://serverless.roboflow.com/ecg-detection/3";
 const ARRHYTHMIA_DETECTION_URL = "https://serverless.roboflow.com/arrhythmia_detection/1";
 const ECG_CLASSIFICATION_URL = "https://serverless.roboflow.com/ecg-classif/1";
+const MODEL_VBBKZ_URL = "https://serverless.roboflow.com/model-vbbkz/2";
 const API_KEY = "peg6MRNbP9N0Ko1S2p29";
 
 // Interface for the detection results
@@ -32,11 +33,12 @@ export interface CombinedResults {
   ecgDetection: DetectionResult | null;
   arrhythmiaDetection: DetectionResult | null;
   ecgClassification: DetectionResult | null;
+  modelVbbkz: DetectionResult | null;
   hasError: boolean;
 }
 
 /**
- * Analyze an image using all three ECG detection models
+ * Analyze an image using all four ECG detection models
  */
 export const analyzeECG = async (base64Image: string): Promise<CombinedResults> => {
   try {
@@ -45,10 +47,11 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       ecgDetection: null,
       arrhythmiaDetection: null,
       ecgClassification: null,
+      modelVbbkz: null,
       hasError: false
     };
     
-    toast.info("Starting analysis with all three models...");
+    toast.info("Starting analysis with all four models...");
     
     // Create common request configuration
     const requestConfig = {
@@ -58,8 +61,8 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       headers: { "Content-Type": "application/x-www-form-urlencoded" }
     };
     
-    // Send requests to all three models in parallel and wait for all to complete
-    const [ecgResponse, arrhythmiaResponse, classificationResponse] = await Promise.all([
+    // Send requests to all four models in parallel and wait for all to complete
+    const [ecgResponse, arrhythmiaResponse, classificationResponse, vbbkzResponse] = await Promise.all([
       axios({
         ...requestConfig,
         url: ECG_DETECTION_URL
@@ -84,6 +87,15 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       }).catch(error => {
         console.error("ECG Classification Error:", error);
         toast.error("Error analyzing with ECG classification model");
+        return { data: null };
+      }),
+      
+      axios({
+        ...requestConfig,
+        url: MODEL_VBBKZ_URL
+      }).catch(error => {
+        console.error("Model VBBKZ Error:", error);
+        toast.error("Error analyzing with Model VBBKZ");
         return { data: null };
       })
     ]);
@@ -149,21 +161,42 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       }
     }
     
+    if (vbbkzResponse.data) {
+      // Ensure predictions is always an array
+      results.modelVbbkz = {
+        ...vbbkzResponse.data,
+        model: "Model VBBKZ",
+        predictions: Array.isArray(vbbkzResponse.data.predictions) 
+          ? vbbkzResponse.data.predictions 
+          : []
+      };
+      
+      // Standardize image dimensions if needed
+      if (results.modelVbbkz.image) {
+        // Store original dimensions for reference
+        console.log("Model VBBKZ image dimensions:", 
+          results.modelVbbkz.image.width, 
+          results.modelVbbkz.image.height
+        );
+      }
+    }
+    
     // Check if all requests failed
-    if (!results.ecgDetection && !results.arrhythmiaDetection && !results.ecgClassification) {
+    if (!results.ecgDetection && !results.arrhythmiaDetection && !results.ecgClassification && !results.modelVbbkz) {
       results.hasError = true;
       toast.error("Failed to analyze ECG with all models");
     } else {
       const successfulModels = [
         results.ecgDetection && "ECG Detection", 
         results.arrhythmiaDetection && "Arrhythmia Detection",
-        results.ecgClassification && "ECG Classification"
+        results.ecgClassification && "ECG Classification",
+        results.modelVbbkz && "Model VBBKZ"
       ].filter(Boolean);
       
-      if (successfulModels.length === 3) {
+      if (successfulModels.length === 4) {
         toast.success("Analysis complete with all models");
       } else {
-        toast.info(`Analysis complete with ${successfulModels.length} of 3 models`);
+        toast.info(`Analysis complete with ${successfulModels.length} of 4 models`);
       }
     }
     
@@ -175,6 +208,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       ecgDetection: null,
       arrhythmiaDetection: null,
       ecgClassification: null,
+      modelVbbkz: null,
       hasError: true
     };
   }

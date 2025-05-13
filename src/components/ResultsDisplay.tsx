@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +13,7 @@ interface ResultsDisplayProps {
     ecgDetection: DetectionResult | null;
     arrhythmiaDetection: DetectionResult | null;
     ecgClassification: DetectionResult | null;
+    modelVbbkz: DetectionResult | null;
     hasError: boolean;
   };
 }
@@ -20,8 +22,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   const ecgCanvasRef = useRef<HTMLCanvasElement>(null);
   const arrhythmiaCanvasRef = useRef<HTMLCanvasElement>(null);
   const classificationCanvasRef = useRef<HTMLCanvasElement>(null);
+  const vbbkzCanvasRef = useRef<HTMLCanvasElement>(null);
   
-  // FIXED: Standardize canvas dimensions for all models
+  // Standardize canvas dimensions for all models
   const standardWidth = 400;
   const standardHeight = 300;
   
@@ -31,7 +34,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     
     // Make sure we have results from all models before rendering
     // or display what we have if at least one model has processed the image
-    const hasAnyResult = results.ecgDetection || results.arrhythmiaDetection || results.ecgClassification;
+    const hasAnyResult = results.ecgDetection || results.arrhythmiaDetection || 
+                        results.ecgClassification || results.modelVbbkz;
     if (!hasAnyResult) return;
     
     const image = new Image();
@@ -89,19 +93,38 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
           );
         }
       }
+      
+      // Draw VBBKZ model results if available
+      if (results.modelVbbkz && vbbkzCanvasRef.current) {
+        const ctx = vbbkzCanvasRef.current.getContext('2d');
+        if (ctx) {
+          // Ensure canvas has standard dimensions
+          vbbkzCanvasRef.current.width = standardWidth;
+          vbbkzCanvasRef.current.height = standardHeight;
+          
+          drawDetections(
+            ctx,
+            image,
+            results.modelVbbkz.predictions,
+            standardWidth,
+            standardHeight
+          );
+        }
+      }
     };
     
     image.src = `data:image/jpeg;base64,${imageBase64}`;
   }, [imageBase64, results]);
   
   // No results to display
-  if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && !results.ecgClassification)) {
+  if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && 
+      !results.ecgClassification && !results.modelVbbkz)) {
     return null;
   }
   
   // Helper to render prediction list
   const renderPredictionList = (predictions: any[] | undefined) => {
-    // Fix: Check if predictions is an array before using map
+    // Check if predictions is an array before using map
     if (!predictions || !Array.isArray(predictions) || predictions.length === 0) {
       return <p className="text-muted-foreground">No abnormalities detected</p>;
     }
@@ -134,7 +157,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   const totalAbnormalities = 
     (results.ecgDetection?.predictions && Array.isArray(results.ecgDetection.predictions) ? results.ecgDetection.predictions.length : 0) + 
     (results.arrhythmiaDetection?.predictions && Array.isArray(results.arrhythmiaDetection.predictions) ? results.arrhythmiaDetection.predictions.length : 0) +
-    (results.ecgClassification?.predictions && Array.isArray(results.ecgClassification.predictions) ? results.ecgClassification.predictions.length : 0);
+    (results.ecgClassification?.predictions && Array.isArray(results.ecgClassification.predictions) ? results.ecgClassification.predictions.length : 0) +
+    (results.modelVbbkz?.predictions && Array.isArray(results.modelVbbkz.predictions) ? results.modelVbbkz.predictions.length : 0);
   
   return (
     <Card className="w-full mt-6">
@@ -160,7 +184,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
           </TabsList>
           
           <TabsContent value="visual" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {results.ecgDetection && (
                 <div className="space-y-2 col-span-1">
                   <h3 className="text-lg font-medium">ECG Detection Model</h3>
@@ -196,11 +220,23 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   />
                 </div>
               )}
+              
+              {results.modelVbbkz && (
+                <div className="space-y-2 col-span-1">
+                  <h3 className="text-lg font-medium">Model VBBKZ</h3>
+                  <canvas
+                    ref={vbbkzCanvasRef}
+                    width={standardWidth}
+                    height={standardHeight}
+                    className="w-full border rounded bg-white"
+                  />
+                </div>
+              )}
             </div>
           </TabsContent>
           
           <TabsContent value="detailed" className="mt-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {results.ecgDetection && (
                 <div>
                   <h3 className="text-lg font-medium mb-2">ECG Detection Results</h3>
@@ -257,6 +293,25 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   </div>
                 </div>
               )}
+              
+              {results.modelVbbkz && (
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Model VBBKZ Results</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Processing time:</span>
+                      <span>{results.modelVbbkz.time.toFixed(2)} ms</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span>{results.modelVbbkz.image.width}x{results.modelVbbkz.image.height}</span>
+                    </div>
+                    <Separator className="my-2" />
+                    <h4 className="font-medium">Detected Abnormalities:</h4>
+                    {renderPredictionList(results.modelVbbkz.predictions)}
+                  </div>
+                </div>
+              )}
             </div>
             
             {totalAbnormalities > 0 && (
@@ -266,7 +321,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   {totalAbnormalities} potential abnormalities detected across {[
                     results.ecgDetection && 'ECG Detection',
                     results.arrhythmiaDetection && 'Arrhythmia Detection',
-                    results.ecgClassification && 'ECG Classification'
+                    results.ecgClassification && 'ECG Classification',
+                    results.modelVbbkz && 'Model VBBKZ'
                   ].filter(Boolean).join(', ')} models.
                 </p>
               </div>

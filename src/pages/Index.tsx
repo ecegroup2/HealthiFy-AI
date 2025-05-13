@@ -17,7 +17,7 @@ const Index = () => {
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Comprehensive ECG Analysis</h2>
           <p className="text-gray-600">
-            Upload your ECG image to detect abnormalities using three advanced AI models.
+            Upload your ECG image to detect abnormalities using four advanced AI models.
             Our system provides a comprehensive analysis by combining specialized detection systems.
           </p>
           <Separator className="my-6" />
@@ -36,9 +36,9 @@ const Index = () => {
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="font-medium text-lg mb-2">2. Triple Model Analysis</h3>
+              <h3 className="font-medium text-lg mb-2">2. Multi-Model Analysis</h3>
               <p className="text-gray-600 text-sm">
-                Our system analyzes your ECG using three specialized AI models working in parallel
+                Our system analyzes your ECG using four specialized AI models working in parallel
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm">

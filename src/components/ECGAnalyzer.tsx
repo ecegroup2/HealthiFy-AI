@@ -16,6 +16,7 @@ const ECGAnalyzer: React.FC = () => {
     ecgDetection: null,
     arrhythmiaDetection: null,
     ecgClassification: null,
+    modelVbbkz: null,
     hasError: false
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -31,6 +32,7 @@ const ECGAnalyzer: React.FC = () => {
         ecgDetection: null,
         arrhythmiaDetection: null,
         ecgClassification: null,
+        modelVbbkz: null,
         hasError: false
       });
     } catch (error) {
@@ -75,10 +77,11 @@ const ECGAnalyzer: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-6">
-            Our advanced system uses three specialized AI models to thoroughly analyze ECG images and detect potential abnormalities:
+            Our advanced system uses four specialized AI models to thoroughly analyze ECG images and detect potential abnormalities:
             <span className="block mt-2 ml-4">• ECG Detection - identifies general ECG features and patterns</span>
             <span className="block ml-4">• Arrhythmia Detection - specializes in detecting irregular heartbeats</span>
             <span className="block ml-4">• ECG Classification - classifies the ECG into different diagnostic categories</span>
+            <span className="block ml-4">• Model VBBKZ - provides additional specialized ECG analysis</span>
           </p>
           
           <ImageUpload onImageSelected={handleImageSelected} isAnalyzing={isAnalyzing} />
@@ -89,7 +92,7 @@ const ECGAnalyzer: React.FC = () => {
               disabled={!imageBase64 || isAnalyzing}
               className="px-8"
             >
-              {isAnalyzing ? "Analyzing with 3 Models..." : "Analyze ECG"}
+              {isAnalyzing ? "Analyzing with 4 Models..." : "Analyze ECG"}
             </Button>
           </div>
         </CardContent>
