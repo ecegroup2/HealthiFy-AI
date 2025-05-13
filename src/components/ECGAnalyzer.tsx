@@ -15,7 +15,7 @@ const ECGAnalyzer: React.FC = () => {
   const [results, setResults] = useState<CombinedResults>({
     ecgDetection: null,
     arrhythmiaDetection: null,
-    model7n51b: null, // Changed from ecgClassification to model7n51b
+    model7n51b: null,
     modelVbbkz: null,
     hasError: false
   });
@@ -31,7 +31,7 @@ const ECGAnalyzer: React.FC = () => {
       setResults({
         ecgDetection: null,
         arrhythmiaDetection: null,
-        model7n51b: null, // Changed from ecgClassification to model7n51b
+        model7n51b: null,
         modelVbbkz: null,
         hasError: false
       });
@@ -71,7 +71,7 @@ const ECGAnalyzer: React.FC = () => {
           <div>
             <CardTitle className="text-2xl">Multi-Model ECG Analyzer</CardTitle>
             <CardDescription>
-              Upload an ECG image for comprehensive AI-powered abnormality detection
+              Upload an ECG image for comprehensive AI-powered abnormality detection with consolidated results
             </CardDescription>
           </div>
         </CardHeader>
@@ -82,6 +82,7 @@ const ECGAnalyzer: React.FC = () => {
             <span className="block ml-4">• Arrhythmia Detection - specializes in detecting irregular heartbeats</span>
             <span className="block ml-4">• Model 7n51b - provides specialized ECG analysis</span>
             <span className="block ml-4">• Model VBBKZ - provides additional specialized ECG analysis</span>
+            <span className="block mt-2">Results are consolidated based on priority rules to provide you with the most important findings.</span>
           </p>
           
           <ImageUpload onImageSelected={handleImageSelected} isAnalyzing={isAnalyzing} />

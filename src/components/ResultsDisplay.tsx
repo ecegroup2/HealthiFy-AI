@@ -1,18 +1,19 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DetectionResult } from '@/utils/roboflowService';
 import { drawDetections } from '@/utils/imageUtils';
+import { consolidateResults, ConsolidatedResult } from '@/utils/analysisUtils';
 
 interface ResultsDisplayProps {
   imageBase64: string | null;
   results: {
     ecgDetection: DetectionResult | null;
     arrhythmiaDetection: DetectionResult | null;
-    model7n51b: DetectionResult | null; // Changed from ecgClassification to model7n51b
+    model7n51b: DetectionResult | null;
     modelVbbkz: DetectionResult | null;
     hasError: boolean;
   };
@@ -21,12 +22,21 @@ interface ResultsDisplayProps {
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results }) => {
   const ecgCanvasRef = useRef<HTMLCanvasElement>(null);
   const arrhythmiaCanvasRef = useRef<HTMLCanvasElement>(null);
-  const model7n51bCanvasRef = useRef<HTMLCanvasElement>(null); // Changed from classificationCanvasRef
+  const model7n51bCanvasRef = useRef<HTMLCanvasElement>(null);
   const vbbkzCanvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // State for consolidated result
+  const [consolidatedResult, setConsolidatedResult] = useState<ConsolidatedResult | null>(null);
   
   // Standardize canvas dimensions for all models
   const standardWidth = 400;
   const standardHeight = 300;
+  
+  // Process consolidated results when results change
+  useEffect(() => {
+    const consolidated = consolidateResults(results);
+    setConsolidatedResult(consolidated);
+  }, [results]);
   
   // Draw results when they change
   useEffect(() => {
@@ -177,6 +187,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Add Consolidated Result Section */}
+        {consolidatedResult && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-lg font-medium text-blue-800 mb-2">Consolidated Analysis Result</h3>
+            <div className="flex items-center gap-3">
+              <Badge 
+                className={
+                  consolidatedResult.condition.toLowerCase().includes("normal") 
+                    ? "bg-green-100 text-green-800 border-green-300" 
+                    : "bg-red-100 text-red-800 border-red-300"
+                }
+              >
+                {Math.round(consolidatedResult.confidence)}%
+              </Badge>
+              <span className="font-medium text-lg">{consolidatedResult.condition}</span>
+            </div>
+            <p className="text-sm text-blue-700 mt-2">
+              Source: {consolidatedResult.sourcedFrom}
+            </p>
+          </div>
+        )}
+
         <Tabs defaultValue="visual">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="visual">Visual Analysis</TabsTrigger>
