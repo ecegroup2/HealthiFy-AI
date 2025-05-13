@@ -81,7 +81,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   
   // Helper to render prediction list
   const renderPredictionList = (predictions: any[] | undefined) => {
-    if (!predictions || predictions.length === 0) {
+    // Fix: Check if predictions is an array before using map
+    if (!predictions || !Array.isArray(predictions) || predictions.length === 0) {
       return <p className="text-muted-foreground">No abnormalities detected</p>;
     }
     
@@ -111,9 +112,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   
   // Calculate total abnormalities detected
   const totalAbnormalities = 
-    (results.ecgDetection?.predictions?.length || 0) + 
-    (results.arrhythmiaDetection?.predictions?.length || 0) +
-    (results.ecgClassification?.predictions?.length || 0);
+    (results.ecgDetection?.predictions && Array.isArray(results.ecgDetection.predictions) ? results.ecgDetection.predictions.length : 0) + 
+    (results.arrhythmiaDetection?.predictions && Array.isArray(results.arrhythmiaDetection.predictions) ? results.arrhythmiaDetection.predictions.length : 0) +
+    (results.ecgClassification?.predictions && Array.isArray(results.ecgClassification.predictions) ? results.ecgClassification.predictions.length : 0);
   
   return (
     <Card className="w-full mt-6">
@@ -258,3 +259,4 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
 };
 
 export default ResultsDisplay;
+

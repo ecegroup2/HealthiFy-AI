@@ -88,23 +88,35 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     
     // Store the results
     if (ecgResponse.data) {
+      // Ensure predictions is always an array
       results.ecgDetection = {
         ...ecgResponse.data,
-        model: "ECG Detection"
+        model: "ECG Detection",
+        predictions: Array.isArray(ecgResponse.data.predictions) 
+          ? ecgResponse.data.predictions 
+          : []
       };
     }
     
     if (arrhythmiaResponse.data) {
+      // Ensure predictions is always an array
       results.arrhythmiaDetection = {
         ...arrhythmiaResponse.data,
-        model: "Arrhythmia Detection"
+        model: "Arrhythmia Detection",
+        predictions: Array.isArray(arrhythmiaResponse.data.predictions) 
+          ? arrhythmiaResponse.data.predictions 
+          : []
       };
     }
     
     if (classificationResponse.data) {
+      // Ensure predictions is always an array
       results.ecgClassification = {
         ...classificationResponse.data,
-        model: "ECG Classification"
+        model: "ECG Classification",
+        predictions: Array.isArray(classificationResponse.data.predictions) 
+          ? classificationResponse.data.predictions 
+          : []
       };
     }
     
