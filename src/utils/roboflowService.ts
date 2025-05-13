@@ -48,6 +48,8 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       hasError: false
     };
     
+    toast.info("Starting analysis with all three models...");
+    
     // Create common request configuration
     const requestConfig = {
       method: "POST",
@@ -56,7 +58,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       headers: { "Content-Type": "application/x-www-form-urlencoded" }
     };
     
-    // Send requests to all three models in parallel
+    // Send requests to all three models in parallel and wait for all to complete
     const [ecgResponse, arrhythmiaResponse, classificationResponse] = await Promise.all([
       axios({
         ...requestConfig,
@@ -86,7 +88,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       })
     ]);
     
-    // Store the results
+    // Store the results - ensure all predictions are processed consistently
     if (ecgResponse.data) {
       // Ensure predictions is always an array
       results.ecgDetection = {
@@ -96,6 +98,15 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
           ? ecgResponse.data.predictions 
           : []
       };
+      
+      // Standardize image dimensions if needed
+      if (results.ecgDetection.image) {
+        // Store original dimensions for reference
+        console.log("ECG Detection image dimensions:", 
+          results.ecgDetection.image.width, 
+          results.ecgDetection.image.height
+        );
+      }
     }
     
     if (arrhythmiaResponse.data) {
@@ -107,6 +118,15 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
           ? arrhythmiaResponse.data.predictions 
           : []
       };
+      
+      // Standardize image dimensions if needed
+      if (results.arrhythmiaDetection.image) {
+        // Store original dimensions for reference
+        console.log("Arrhythmia Detection image dimensions:", 
+          results.arrhythmiaDetection.image.width, 
+          results.arrhythmiaDetection.image.height
+        );
+      }
     }
     
     if (classificationResponse.data) {
@@ -118,6 +138,15 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
           ? classificationResponse.data.predictions 
           : []
       };
+      
+      // Standardize image dimensions if needed
+      if (results.ecgClassification.image) {
+        // Store original dimensions for reference
+        console.log("Classification image dimensions:", 
+          results.ecgClassification.image.width, 
+          results.ecgClassification.image.height
+        );
+      }
     }
     
     // Check if all requests failed

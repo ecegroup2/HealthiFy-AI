@@ -19,7 +19,7 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 /**
- * Draw detection results on canvas
+ * Draw detection results on canvas with standardized dimensions
  */
 export const drawDetections = (
   ctx: CanvasRenderingContext2D,
@@ -28,7 +28,26 @@ export const drawDetections = (
   canvasWidth: number,
   canvasHeight: number
 ): void => {
-  if (!predictions || predictions.length === 0) return;
+  if (!predictions || predictions.length === 0) {
+    // If no predictions, just draw the image
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    
+    // Calculate scaling to fit the image properly
+    const scale = Math.min(
+      canvasWidth / image.width, 
+      canvasHeight / image.height
+    );
+    
+    const scaledWidth = image.width * scale;
+    const scaledHeight = image.height * scale;
+    
+    // Center the image
+    const offsetX = (canvasWidth - scaledWidth) / 2;
+    const offsetY = (canvasHeight - scaledHeight) / 2;
+    
+    ctx.drawImage(image, offsetX, offsetY, scaledWidth, scaledHeight);
+    return;
+  }
   
   // Clear the canvas
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);

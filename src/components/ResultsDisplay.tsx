@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,9 +21,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   const arrhythmiaCanvasRef = useRef<HTMLCanvasElement>(null);
   const classificationCanvasRef = useRef<HTMLCanvasElement>(null);
   
+  // FIXED: Standardize canvas dimensions for all models
+  const standardWidth = 400;
+  const standardHeight = 300;
+  
   // Draw results when they change
   useEffect(() => {
     if (!imageBase64) return;
+    
+    // Make sure we have results from all models before rendering
+    // or display what we have if at least one model has processed the image
+    const hasAnyResult = results.ecgDetection || results.arrhythmiaDetection || results.ecgClassification;
+    if (!hasAnyResult) return;
     
     const image = new Image();
     image.onload = () => {
@@ -32,12 +40,16 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
       if (results.ecgDetection && ecgCanvasRef.current) {
         const ctx = ecgCanvasRef.current.getContext('2d');
         if (ctx) {
+          // Ensure canvas has standard dimensions
+          ecgCanvasRef.current.width = standardWidth;
+          ecgCanvasRef.current.height = standardHeight;
+          
           drawDetections(
             ctx,
             image,
             results.ecgDetection.predictions,
-            ecgCanvasRef.current.width,
-            ecgCanvasRef.current.height
+            standardWidth,
+            standardHeight
           );
         }
       }
@@ -46,12 +58,16 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
       if (results.arrhythmiaDetection && arrhythmiaCanvasRef.current) {
         const ctx = arrhythmiaCanvasRef.current.getContext('2d');
         if (ctx) {
+          // Ensure canvas has standard dimensions
+          arrhythmiaCanvasRef.current.width = standardWidth;
+          arrhythmiaCanvasRef.current.height = standardHeight;
+          
           drawDetections(
             ctx,
             image,
             results.arrhythmiaDetection.predictions,
-            arrhythmiaCanvasRef.current.width,
-            arrhythmiaCanvasRef.current.height
+            standardWidth,
+            standardHeight
           );
         }
       }
@@ -60,12 +76,16 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
       if (results.ecgClassification && classificationCanvasRef.current) {
         const ctx = classificationCanvasRef.current.getContext('2d');
         if (ctx) {
+          // Ensure canvas has standard dimensions
+          classificationCanvasRef.current.width = standardWidth;
+          classificationCanvasRef.current.height = standardHeight;
+          
           drawDetections(
             ctx,
             image,
             results.ecgClassification.predictions,
-            classificationCanvasRef.current.width,
-            classificationCanvasRef.current.height
+            standardWidth,
+            standardHeight
           );
         }
       }
@@ -146,8 +166,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium">ECG Detection Model</h3>
                   <canvas
                     ref={ecgCanvasRef}
-                    width={400}
-                    height={300}
+                    width={standardWidth}
+                    height={standardHeight}
                     className="w-full border rounded bg-white"
                   />
                 </div>
@@ -158,8 +178,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium">Arrhythmia Detection</h3>
                   <canvas
                     ref={arrhythmiaCanvasRef}
-                    width={400}
-                    height={300}
+                    width={standardWidth}
+                    height={standardHeight}
                     className="w-full border rounded bg-white"
                   />
                 </div>
@@ -170,8 +190,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium">ECG Classification</h3>
                   <canvas
                     ref={classificationCanvasRef}
-                    width={400}
-                    height={300}
+                    width={standardWidth}
+                    height={standardHeight}
                     className="w-full border rounded bg-white"
                   />
                 </div>
