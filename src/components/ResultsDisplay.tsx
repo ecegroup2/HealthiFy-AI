@@ -259,4 +259,3 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
 };
 
 export default ResultsDisplay;
-
