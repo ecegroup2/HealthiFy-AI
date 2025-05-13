@@ -15,6 +15,7 @@ const ECGAnalyzer: React.FC = () => {
   const [results, setResults] = useState<CombinedResults>({
     ecgDetection: null,
     arrhythmiaDetection: null,
+    ecgClassification: null,
     hasError: false
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -29,6 +30,7 @@ const ECGAnalyzer: React.FC = () => {
       setResults({
         ecgDetection: null,
         arrhythmiaDetection: null,
+        ecgClassification: null,
         hasError: false
       });
     } catch (error) {
@@ -46,7 +48,7 @@ const ECGAnalyzer: React.FC = () => {
     
     setIsAnalyzing(true);
     try {
-      toast.info("Analyzing ECG image with AI models...");
+      toast.info("Analyzing ECG image with advanced AI models...");
       const analysisResults = await analyzeECG(imageBase64);
       setResults(analysisResults);
     } catch (error) {
@@ -65,16 +67,18 @@ const ECGAnalyzer: React.FC = () => {
             <Activity className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-2xl">ECG Analyzer</CardTitle>
+            <CardTitle className="text-2xl">Multi-Model ECG Analyzer</CardTitle>
             <CardDescription>
-              Upload an ECG image for AI-powered abnormality detection
+              Upload an ECG image for comprehensive AI-powered abnormality detection
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-6">
-            Our system uses two specialized AI models to analyze ECG images and detect potential abnormalities.
-            The analysis includes both general ECG detection and specialized arrhythmia detection.
+            Our advanced system uses three specialized AI models to thoroughly analyze ECG images and detect potential abnormalities:
+            <span className="block mt-2 ml-4">• ECG Detection - identifies general ECG features and patterns</span>
+            <span className="block ml-4">• Arrhythmia Detection - specializes in detecting irregular heartbeats</span>
+            <span className="block ml-4">• ECG Classification - classifies the ECG into different diagnostic categories</span>
           </p>
           
           <ImageUpload onImageSelected={handleImageSelected} isAnalyzing={isAnalyzing} />
@@ -85,7 +89,7 @@ const ECGAnalyzer: React.FC = () => {
               disabled={!imageBase64 || isAnalyzing}
               className="px-8"
             >
-              {isAnalyzing ? "Analyzing..." : "Analyze ECG"}
+              {isAnalyzing ? "Analyzing with 3 Models..." : "Analyze ECG"}
             </Button>
           </div>
         </CardContent>

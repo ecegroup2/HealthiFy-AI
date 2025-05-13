@@ -5,6 +5,7 @@ import { toast } from "sonner";
 // Constants for the API endpoints
 const ECG_DETECTION_URL = "https://serverless.roboflow.com/ecg-detection/3";
 const ARRHYTHMIA_DETECTION_URL = "https://serverless.roboflow.com/arrhythmia_detection/1";
+const ECG_CLASSIFICATION_URL = "https://serverless.roboflow.com/ecg-classif/1";
 const API_KEY = "peg6MRNbP9N0Ko1S2p29";
 
 // Interface for the detection results
@@ -30,11 +31,12 @@ export interface DetectionResult {
 export interface CombinedResults {
   ecgDetection: DetectionResult | null;
   arrhythmiaDetection: DetectionResult | null;
+  ecgClassification: DetectionResult | null;
   hasError: boolean;
 }
 
 /**
- * Analyze an image using both ECG detection models
+ * Analyze an image using all three ECG detection models
  */
 export const analyzeECG = async (base64Image: string): Promise<CombinedResults> => {
   try {
@@ -42,6 +44,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     const results: CombinedResults = {
       ecgDetection: null,
       arrhythmiaDetection: null,
+      ecgClassification: null,
       hasError: false
     };
     
@@ -53,8 +56,8 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       headers: { "Content-Type": "application/x-www-form-urlencoded" }
     };
     
-    // Send requests to both models in parallel
-    const [ecgResponse, arrhythmiaResponse] = await Promise.all([
+    // Send requests to all three models in parallel
+    const [ecgResponse, arrhythmiaResponse, classificationResponse] = await Promise.all([
       axios({
         ...requestConfig,
         url: ECG_DETECTION_URL
@@ -70,6 +73,15 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       }).catch(error => {
         console.error("Arrhythmia Detection Error:", error);
         toast.error("Error analyzing with Arrhythmia detection model");
+        return { data: null };
+      }),
+      
+      axios({
+        ...requestConfig,
+        url: ECG_CLASSIFICATION_URL
+      }).catch(error => {
+        console.error("ECG Classification Error:", error);
+        toast.error("Error analyzing with ECG classification model");
         return { data: null };
       })
     ]);
@@ -89,14 +101,29 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
       };
     }
     
-    // Check if both requests failed
-    if (!results.ecgDetection && !results.arrhythmiaDetection) {
+    if (classificationResponse.data) {
+      results.ecgClassification = {
+        ...classificationResponse.data,
+        model: "ECG Classification"
+      };
+    }
+    
+    // Check if all requests failed
+    if (!results.ecgDetection && !results.arrhythmiaDetection && !results.ecgClassification) {
       results.hasError = true;
-      toast.error("Failed to analyze ECG with both models");
-    } else if (results.ecgDetection && results.arrhythmiaDetection) {
-      toast.success("Analysis complete with both models");
+      toast.error("Failed to analyze ECG with all models");
     } else {
-      toast.info("Analysis complete with one model");
+      const successfulModels = [
+        results.ecgDetection && "ECG Detection", 
+        results.arrhythmiaDetection && "Arrhythmia Detection",
+        results.ecgClassification && "ECG Classification"
+      ].filter(Boolean);
+      
+      if (successfulModels.length === 3) {
+        toast.success("Analysis complete with all models");
+      } else {
+        toast.info(`Analysis complete with ${successfulModels.length} of 3 models`);
+      }
     }
     
     return results;
@@ -106,6 +133,7 @@ export const analyzeECG = async (base64Image: string): Promise<CombinedResults> 
     return {
       ecgDetection: null,
       arrhythmiaDetection: null,
+      ecgClassification: null,
       hasError: true
     };
   }

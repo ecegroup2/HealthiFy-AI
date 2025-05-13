@@ -12,6 +12,7 @@ interface ResultsDisplayProps {
   results: {
     ecgDetection: DetectionResult | null;
     arrhythmiaDetection: DetectionResult | null;
+    ecgClassification: DetectionResult | null;
     hasError: boolean;
   };
 }
@@ -19,6 +20,7 @@ interface ResultsDisplayProps {
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results }) => {
   const ecgCanvasRef = useRef<HTMLCanvasElement>(null);
   const arrhythmiaCanvasRef = useRef<HTMLCanvasElement>(null);
+  const classificationCanvasRef = useRef<HTMLCanvasElement>(null);
   
   // Draw results when they change
   useEffect(() => {
@@ -53,13 +55,27 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
           );
         }
       }
+      
+      // Draw classification results if available
+      if (results.ecgClassification && classificationCanvasRef.current) {
+        const ctx = classificationCanvasRef.current.getContext('2d');
+        if (ctx) {
+          drawDetections(
+            ctx,
+            image,
+            results.ecgClassification.predictions,
+            classificationCanvasRef.current.width,
+            classificationCanvasRef.current.height
+          );
+        }
+      }
     };
     
     image.src = `data:image/jpeg;base64,${imageBase64}`;
   }, [imageBase64, results]);
   
   // No results to display
-  if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection)) {
+  if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && !results.ecgClassification)) {
     return null;
   }
   
@@ -93,14 +109,21 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     );
   };
   
+  // Calculate total abnormalities detected
+  const totalAbnormalities = 
+    (results.ecgDetection?.predictions?.length || 0) + 
+    (results.arrhythmiaDetection?.predictions?.length || 0) +
+    (results.ecgClassification?.predictions?.length || 0);
+  
   return (
     <Card className="w-full mt-6">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           Analysis Results
-          {(results.ecgDetection?.predictions.length || 0) + 
-           (results.arrhythmiaDetection?.predictions.length || 0) > 0 ? (
-            <Badge variant="destructive">Abnormalities Detected</Badge>
+          {totalAbnormalities > 0 ? (
+            <Badge variant="destructive">
+              {totalAbnormalities} {totalAbnormalities === 1 ? 'Abnormality' : 'Abnormalities'} Detected
+            </Badge>
           ) : (
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
               No Abnormalities
@@ -116,67 +139,115 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
           </TabsList>
           
           <TabsContent value="visual" className="mt-4 space-y-4">
-            {results.ecgDetection && (
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">ECG Detection Model</h3>
-                <canvas
-                  ref={ecgCanvasRef}
-                  width={600}
-                  height={400}
-                  className="w-full border rounded bg-white"
-                />
-              </div>
-            )}
-            
-            {results.arrhythmiaDetection && (
-              <div className="space-y-2 mt-6">
-                <h3 className="text-lg font-medium">Arrhythmia Detection Model</h3>
-                <canvas
-                  ref={arrhythmiaCanvasRef}
-                  width={600}
-                  height={400}
-                  className="w-full border rounded bg-white"
-                />
-              </div>
-            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {results.ecgDetection && (
+                <div className="space-y-2 col-span-1">
+                  <h3 className="text-lg font-medium">ECG Detection Model</h3>
+                  <canvas
+                    ref={ecgCanvasRef}
+                    width={400}
+                    height={300}
+                    className="w-full border rounded bg-white"
+                  />
+                </div>
+              )}
+              
+              {results.arrhythmiaDetection && (
+                <div className="space-y-2 col-span-1">
+                  <h3 className="text-lg font-medium">Arrhythmia Detection</h3>
+                  <canvas
+                    ref={arrhythmiaCanvasRef}
+                    width={400}
+                    height={300}
+                    className="w-full border rounded bg-white"
+                  />
+                </div>
+              )}
+              
+              {results.ecgClassification && (
+                <div className="space-y-2 col-span-1">
+                  <h3 className="text-lg font-medium">ECG Classification</h3>
+                  <canvas
+                    ref={classificationCanvasRef}
+                    width={400}
+                    height={300}
+                    className="w-full border rounded bg-white"
+                  />
+                </div>
+              )}
+            </div>
           </TabsContent>
           
           <TabsContent value="detailed" className="mt-4 space-y-6">
-            {results.ecgDetection && (
-              <div>
-                <h3 className="text-lg font-medium mb-2">ECG Detection Results</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Processing time:</span>
-                    <span>{results.ecgDetection.time.toFixed(2)} ms</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {results.ecgDetection && (
+                <div>
+                  <h3 className="text-lg font-medium mb-2">ECG Detection Results</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Processing time:</span>
+                      <span>{results.ecgDetection.time.toFixed(2)} ms</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span>{results.ecgDetection.image.width}x{results.ecgDetection.image.height}</span>
+                    </div>
+                    <Separator className="my-2" />
+                    <h4 className="font-medium">Detected Abnormalities:</h4>
+                    {renderPredictionList(results.ecgDetection.predictions)}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Image dimensions:</span>
-                    <span>{results.ecgDetection.image.width}x{results.ecgDetection.image.height}</span>
-                  </div>
-                  <Separator className="my-2" />
-                  <h4 className="font-medium">Detected Abnormalities:</h4>
-                  {renderPredictionList(results.ecgDetection.predictions)}
                 </div>
-              </div>
-            )}
+              )}
+              
+              {results.arrhythmiaDetection && (
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Arrhythmia Detection Results</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Processing time:</span>
+                      <span>{results.arrhythmiaDetection.time.toFixed(2)} ms</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span>{results.arrhythmiaDetection.image.width}x{results.arrhythmiaDetection.image.height}</span>
+                    </div>
+                    <Separator className="my-2" />
+                    <h4 className="font-medium">Detected Abnormalities:</h4>
+                    {renderPredictionList(results.arrhythmiaDetection.predictions)}
+                  </div>
+                </div>
+              )}
+              
+              {results.ecgClassification && (
+                <div>
+                  <h3 className="text-lg font-medium mb-2">ECG Classification Results</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Processing time:</span>
+                      <span>{results.ecgClassification.time.toFixed(2)} ms</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span>{results.ecgClassification.image.width}x{results.ecgClassification.image.height}</span>
+                    </div>
+                    <Separator className="my-2" />
+                    <h4 className="font-medium">Detected Abnormalities:</h4>
+                    {renderPredictionList(results.ecgClassification.predictions)}
+                  </div>
+                </div>
+              )}
+            </div>
             
-            {results.arrhythmiaDetection && (
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Arrhythmia Detection Results</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Processing time:</span>
-                    <span>{results.arrhythmiaDetection.time.toFixed(2)} ms</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Image dimensions:</span>
-                    <span>{results.arrhythmiaDetection.image.width}x{results.arrhythmiaDetection.image.height}</span>
-                  </div>
-                  <Separator className="my-2" />
-                  <h4 className="font-medium">Detected Abnormalities:</h4>
-                  {renderPredictionList(results.arrhythmiaDetection.predictions)}
-                </div>
+            {totalAbnormalities > 0 && (
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                <h3 className="text-lg font-medium text-yellow-800">Combined Analysis</h3>
+                <p className="text-yellow-700 mt-1">
+                  {totalAbnormalities} potential abnormalities detected across {[
+                    results.ecgDetection && 'ECG Detection',
+                    results.arrhythmiaDetection && 'Arrhythmia Detection',
+                    results.ecgClassification && 'ECG Classification'
+                  ].filter(Boolean).join(', ')} models.
+                </p>
               </div>
             )}
           </TabsContent>
