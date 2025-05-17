@@ -74,7 +74,7 @@ const ECGAnalyzer: React.FC = () => {
       }
       
       // If validation passes, proceed with analysis
-      toast.info("Analyzing ECG image...");
+      toast.info("Analyzing ECG image with 5 advanced AI models...");
       const analysisResults = await analyzeECG(imageBase64);
       
       // Add Gemini analysis
@@ -164,7 +164,7 @@ const ECGAnalyzer: React.FC = () => {
             <div className="flex justify-between items-center mt-6">
               <div className="flex items-center text-gray-400 text-sm">
                 <Activity className="h-4 w-4 mr-1" />
-                <span>Powered by Gemini 2.5 Pro AI</span>
+                <span>For ECG Analysis</span>
               </div>
               <Button 
                 onClick={handleAnalyze} 
