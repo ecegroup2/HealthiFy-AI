@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { DetectionResult } from '@/utils/roboflowService';
 import { drawDetections } from '@/utils/imageUtils';
 import { consolidateResults, ConsolidatedResult } from '@/utils/analysisUtils';
+import { GeminiResult } from '@/utils/geminiService';
+import { Activity, Brain, Sparkles } from 'lucide-react';
 
 interface ResultsDisplayProps {
   imageBase64: string | null;
@@ -15,6 +16,7 @@ interface ResultsDisplayProps {
     arrhythmiaDetection: DetectionResult | null;
     model7n51b: DetectionResult | null;
     modelVbbkz: DetectionResult | null;
+    geminiResult?: GeminiResult | null;
     hasError: boolean;
   };
 }
@@ -38,7 +40,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     setConsolidatedResult(consolidated);
   }, [results]);
   
-  // Draw results when they change
   useEffect(() => {
     if (!imageBase64) return;
     
@@ -126,12 +127,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     image.src = `data:image/jpeg;base64,${imageBase64}`;
   }, [imageBase64, results]);
   
-  // No results to display
-  if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && 
-      !results.model7n51b && !results.modelVbbkz)) {
-    return null;
-  }
-  
   // Helper to render prediction list
   const renderPredictionList = (predictions: any[] | undefined) => {
     // Check if predictions is an array before using map
@@ -163,6 +158,12 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     );
   };
   
+  // No results to display
+  if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && 
+      !results.model7n51b && !results.modelVbbkz && !results.geminiResult)) {
+    return null;
+  }
+  
   // Calculate total abnormalities detected
   const totalAbnormalities = 
     (results.ecgDetection?.predictions && Array.isArray(results.ecgDetection.predictions) ? results.ecgDetection.predictions.length : 0) + 
@@ -171,9 +172,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
     (results.modelVbbkz?.predictions && Array.isArray(results.modelVbbkz.predictions) ? results.modelVbbkz.predictions.length : 0);
   
   return (
-    <Card className="w-full mt-6">
+    <Card className="w-full mt-6 bg-[#0f1729] text-white border-none shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
+          <Activity className="h-5 w-5 text-blue-400" />
           Analysis Results
           {totalAbnormalities > 0 ? (
             <Badge variant="destructive">
@@ -187,34 +189,63 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Add Gemini Result Section */}
+        {results.geminiResult && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/20 rounded-lg">
+            <h3 className="text-lg font-medium text-purple-300 mb-2 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+              Gemini 2.5 Pro Analysis
+            </h3>
+            <div className="flex items-center gap-3">
+              <Badge className={
+                results.geminiResult.confidence > 70 
+                  ? "bg-red-900/50 text-red-200 border-red-500/50" 
+                  : results.geminiResult.confidence > 40
+                    ? "bg-yellow-900/50 text-yellow-200 border-yellow-500/50"
+                    : "bg-green-900/50 text-green-200 border-green-500/50"
+              }>
+                {results.geminiResult.confidence}%
+              </Badge>
+              <span className="font-medium text-lg">{results.geminiResult.condition}</span>
+            </div>
+            <p className="text-sm text-gray-300 mt-2">
+              {results.geminiResult.explanation}
+            </p>
+          </div>
+        )}
+
         {/* Add Consolidated Result Section */}
         {consolidatedResult && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="text-lg font-medium text-blue-800 mb-2">Consolidated Analysis Result</h3>
+          <div className="mb-6 p-4 bg-blue-900/20 border border-blue-500/20 rounded-lg">
+            <h3 className="text-lg font-medium text-blue-300 mb-2 flex items-center gap-2">
+              <Brain className="h-5 w-5 text-blue-400" />
+              Multi-Model Consolidated Analysis
+            </h3>
             <div className="flex items-center gap-3">
               <Badge 
                 className={
                   consolidatedResult.condition.toLowerCase().includes("normal") 
-                    ? "bg-green-100 text-green-800 border-green-300" 
-                    : "bg-red-100 text-red-800 border-red-300"
+                    ? "bg-green-900/50 text-green-200 border-green-500/50" 
+                    : "bg-red-900/50 text-red-200 border-red-500/50"
                 }
               >
                 {Math.round(consolidatedResult.confidence)}%
               </Badge>
               <span className="font-medium text-lg">{consolidatedResult.condition}</span>
             </div>
-            <p className="text-sm text-blue-700 mt-2">
+            <p className="text-sm text-gray-300 mt-2">
               Source: {consolidatedResult.sourcedFrom}
             </p>
           </div>
         )}
 
-        <Tabs defaultValue="visual">
-          <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="visual">Visual Analysis</TabsTrigger>
-            <TabsTrigger value="detailed">Detailed Results</TabsTrigger>
+        <Tabs defaultValue="visual" className="text-white">
+          <TabsList className="w-full grid grid-cols-2 bg-gray-800">
+            <TabsTrigger value="visual" className="data-[state=active]:bg-gray-700">Visual Analysis</TabsTrigger>
+            <TabsTrigger value="detailed" className="data-[state=active]:bg-gray-700">Detailed Results</TabsTrigger>
           </TabsList>
           
+          {/* Rest of the code remains the same */}
           <TabsContent value="visual" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {results.ecgDetection && (
@@ -224,7 +255,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                     ref={ecgCanvasRef}
                     width={standardWidth}
                     height={standardHeight}
-                    className="w-full border rounded bg-white"
+                    className="w-full border border-gray-700 rounded bg-black/50"
                   />
                 </div>
               )}
@@ -236,7 +267,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                     ref={arrhythmiaCanvasRef}
                     width={standardWidth}
                     height={standardHeight}
-                    className="w-full border rounded bg-white"
+                    className="w-full border border-gray-700 rounded bg-black/50"
                   />
                 </div>
               )}
@@ -248,7 +279,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                     ref={model7n51bCanvasRef}
                     width={standardWidth}
                     height={standardHeight}
-                    className="w-full border rounded bg-white"
+                    className="w-full border border-gray-700 rounded bg-black/50"
                   />
                 </div>
               )}
@@ -260,7 +291,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                     ref={vbbkzCanvasRef}
                     width={standardWidth}
                     height={standardHeight}
-                    className="w-full border rounded bg-white"
+                    className="w-full border border-gray-700 rounded bg-black/50"
                   />
                 </div>
               )}
@@ -274,14 +305,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium mb-2">ECG Detection Results</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Processing time:</span>
+                      <span className="text-gray-400">Processing time:</span>
                       <span>{results.ecgDetection.time.toFixed(2)} ms</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span className="text-gray-400">Image dimensions:</span>
                       <span>{results.ecgDetection.image.width}x{results.ecgDetection.image.height}</span>
                     </div>
-                    <Separator className="my-2" />
+                    <Separator className="my-2 bg-gray-700" />
                     <h4 className="font-medium">Detected Abnormalities:</h4>
                     {renderPredictionList(results.ecgDetection.predictions)}
                   </div>
@@ -293,14 +324,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium mb-2">Arrhythmia Detection Results</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Processing time:</span>
+                      <span className="text-gray-400">Processing time:</span>
                       <span>{results.arrhythmiaDetection.time.toFixed(2)} ms</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span className="text-gray-400">Image dimensions:</span>
                       <span>{results.arrhythmiaDetection.image.width}x{results.arrhythmiaDetection.image.height}</span>
                     </div>
-                    <Separator className="my-2" />
+                    <Separator className="my-2 bg-gray-700" />
                     <h4 className="font-medium">Detected Abnormalities:</h4>
                     {renderPredictionList(results.arrhythmiaDetection.predictions)}
                   </div>
@@ -312,14 +343,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium mb-2">Model 7n51b Results</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Processing time:</span>
+                      <span className="text-gray-400">Processing time:</span>
                       <span>{results.model7n51b.time.toFixed(2)} ms</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span className="text-gray-400">Image dimensions:</span>
                       <span>{results.model7n51b.image.width}x{results.model7n51b.image.height}</span>
                     </div>
-                    <Separator className="my-2" />
+                    <Separator className="my-2 bg-gray-700" />
                     <h4 className="font-medium">Detected Abnormalities:</h4>
                     {renderPredictionList(results.model7n51b.predictions)}
                   </div>
@@ -331,14 +362,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   <h3 className="text-lg font-medium mb-2">Model VBBKZ Results</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Processing time:</span>
+                      <span className="text-gray-400">Processing time:</span>
                       <span>{results.modelVbbkz.time.toFixed(2)} ms</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Image dimensions:</span>
+                      <span className="text-gray-400">Image dimensions:</span>
                       <span>{results.modelVbbkz.image.width}x{results.modelVbbkz.image.height}</span>
                     </div>
-                    <Separator className="my-2" />
+                    <Separator className="my-2 bg-gray-700" />
                     <h4 className="font-medium">Detected Abnormalities:</h4>
                     {renderPredictionList(results.modelVbbkz.predictions)}
                   </div>
@@ -347,9 +378,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
             </div>
             
             {totalAbnormalities > 0 && (
-              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                <h3 className="text-lg font-medium text-yellow-800">Combined Analysis</h3>
-                <p className="text-yellow-700 mt-1">
+              <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/20 rounded-md">
+                <h3 className="text-lg font-medium text-yellow-300">Combined Analysis</h3>
+                <p className="text-yellow-200/80 mt-1">
                   {totalAbnormalities} potential abnormalities detected across {[
                     results.ecgDetection && 'ECG Detection',
                     results.arrhythmiaDetection && 'Arrhythmia Detection',
