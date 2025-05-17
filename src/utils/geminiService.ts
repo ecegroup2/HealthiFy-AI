@@ -28,7 +28,7 @@ export async function analyzeECGWithGemini(imageBase64: string, existingResults:
               2. A confidence score (0-100%)
               3. A brief explanation of your assessment
               
-              Format your response as a JSON object with keys: condition, confidence (number), explanation (string)`
+              IMPORTANT: Format your response ONLY as a valid JSON object with keys: condition, confidence (number), explanation (string). Do not include any other text or formatting outside the JSON object.`
             },
             {
               inlineData: {
@@ -57,18 +57,33 @@ export async function analyzeECGWithGemini(imageBase64: string, existingResults:
       }
     );
 
+    console.log("Gemini API Response:", response.data);
+
     // Parse the response to extract the JSON object
     const textContent = response.data.candidates[0].content.parts[0].text;
+    console.log("Gemini raw text response:", textContent);
+    
+    // Try to find and extract JSON from the response
     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
       const jsonStr = jsonMatch[0];
-      const result = JSON.parse(jsonStr);
-      return {
-        condition: result.condition,
-        confidence: result.confidence,
-        explanation: result.explanation
-      };
+      console.log("Extracted JSON string:", jsonStr);
+      try {
+        const result = JSON.parse(jsonStr);
+        return {
+          condition: result.condition || "Analysis inconclusive",
+          confidence: typeof result.confidence === 'number' ? result.confidence : 0,
+          explanation: result.explanation || "No explanation provided"
+        };
+      } catch (jsonError) {
+        console.error("Error parsing JSON from Gemini response:", jsonError);
+        return {
+          condition: "JSON parsing error",
+          confidence: 0,
+          explanation: "Failed to parse the structured analysis from Gemini."
+        };
+      }
     }
 
     // Fallback in case JSON parsing fails
@@ -79,10 +94,13 @@ export async function analyzeECGWithGemini(imageBase64: string, existingResults:
     };
   } catch (error) {
     console.error("Error analyzing with Gemini:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error details:", error.response?.data || error.message);
+    }
     return {
       condition: "Error in Gemini analysis",
       confidence: 0,
-      explanation: "An error occurred when consulting the Gemini model."
+      explanation: "An error occurred when consulting the Gemini model. Please check your API key and try again."
     };
   }
 }
