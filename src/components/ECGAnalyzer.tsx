@@ -7,7 +7,8 @@ import { Activity } from "lucide-react";
 import ImageUpload from './ImageUpload';
 import ResultsDisplay from './ResultsDisplay';
 import { fileToBase64 } from '@/utils/imageUtils';
-import { analyzeECG, CombinedResults } from '@/utils/roboflowService';
+import { analyzeECG, CombinedResults, validateECGImage } from '@/utils/roboflowService';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const ECGAnalyzer: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -20,10 +21,12 @@ const ECGAnalyzer: React.FC = () => {
     hasError: false
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   // Handle file selection
   const handleImageSelected = async (file: File) => {
     setSelectedFile(file);
+    setValidationError(null); // Reset any previous validation errors
     try {
       const base64 = await fileToBase64(file);
       setImageBase64(base64);
@@ -49,7 +52,21 @@ const ECGAnalyzer: React.FC = () => {
     }
     
     setIsAnalyzing(true);
+    setValidationError(null);
+    
     try {
+      // First validate if the image is an ECG image
+      toast.info("Validating image...");
+      const isECGImage = await validateECGImage(imageBase64);
+      
+      if (!isECGImage) {
+        setValidationError("The uploaded image does not appear to be an ECG. Please upload a valid ECG image.");
+        toast.error("Invalid image type detected");
+        setIsAnalyzing(false);
+        return;
+      }
+      
+      // If validation passes, proceed with analysis
       toast.info("Analyzing ECG image with advanced AI models...");
       const analysisResults = await analyzeECG(imageBase64);
       setResults(analysisResults);
@@ -85,12 +102,19 @@ const ECGAnalyzer: React.FC = () => {
             <span className="block mt-2">Results are consolidated based on priority rules to provide you with the most important findings.</span>
           </p>
           
+          {validationError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Invalid Image</AlertTitle>
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          
           <ImageUpload onImageSelected={handleImageSelected} isAnalyzing={isAnalyzing} />
           
           <div className="flex justify-center mt-4">
             <Button 
               onClick={handleAnalyze} 
-              disabled={!imageBase64 || isAnalyzing}
+              disabled={!imageBase64 || isAnalyzing || validationError !== null}
               className="px-8"
             >
               {isAnalyzing ? "Analyzing with 4 Models..." : "Analyze ECG"}

@@ -7,6 +7,7 @@ const ECG_DETECTION_URL = "https://serverless.roboflow.com/ecg-detection/3";
 const ARRHYTHMIA_DETECTION_URL = "https://serverless.roboflow.com/arrhythmia_detection/1";
 const MODEL_VBBKZ_URL = "https://serverless.roboflow.com/model-vbbkz/2";
 const MODEL_7N51B_URL = "https://serverless.roboflow.com/model-7n51b/1"; // New model replacing ECG Classification
+const IMAGE_VALIDATION_URL = "https://serverless.roboflow.com/coco-dataset-vdnr1/23"; // New URL for image validation
 const API_KEY = "peg6MRNbP9N0Ko1S2p29";
 
 // Interface for the detection results
@@ -36,6 +37,47 @@ export interface CombinedResults {
   modelVbbkz: DetectionResult | null;
   hasError: boolean;
 }
+
+/**
+ * Validates if the uploaded image is an ECG image
+ * @param base64Image Base64 encoded image data
+ * @returns Promise<boolean> True if the image is likely an ECG image, false otherwise
+ */
+export const validateECGImage = async (base64Image: string): Promise<boolean> => {
+  try {
+    const requestConfig = {
+      method: "POST",
+      url: IMAGE_VALIDATION_URL,
+      params: { api_key: API_KEY },
+      data: base64Image,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    };
+
+    const response = await axios(requestConfig);
+    
+    // If no predictions were found, consider it valid (to avoid false negatives)
+    if (!response.data || !response.data.predictions || response.data.predictions.length === 0) {
+      return true;
+    }
+    
+    // Check if any of the predictions indicate this is NOT an ECG image
+    // The coco dataset has many common objects, so if it detects anything with high confidence,
+    // it's likely not an ECG image
+    const nonECGPredictions = response.data.predictions.filter(
+      (pred: any) => pred.confidence > 0.5 && 
+      !pred.class.toLowerCase().includes("chart") && 
+      !pred.class.toLowerCase().includes("document") &&
+      !pred.class.toLowerCase().includes("screen")
+    );
+    
+    // If we found confident predictions of common objects, it's likely not an ECG
+    return nonECGPredictions.length === 0;
+  } catch (error) {
+    console.error("Image validation error:", error);
+    // In case of error, let it pass through (default to true)
+    return true;
+  }
+};
 
 /**
  * Analyze an image using all four ECG detection models
