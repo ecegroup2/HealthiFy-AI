@@ -6,10 +6,15 @@ import { Activity, Heart } from "lucide-react";
 const Index = () => {
   return (
     <div className="min-h-screen bg-[#070b16] text-white">
-      <header className="bg-[#0f1729] shadow-md border-b border-gray-800">
+      <header className="bg-[#0f1729] shadow-md border-b border-gray-800 mx-auto">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Heart className="h-6 w-6 text-red-500" />
+           <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 border-2 border-rose-500 rounded-full opacity-20 animate-ping"></div>
+                <Heart className="h-8 w-8 text-rose-500" />
+              </div>
+            </div>
             <span className="text-white">ECG Analysis</span>
           </h1>
         </div>
