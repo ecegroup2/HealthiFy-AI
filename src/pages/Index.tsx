@@ -1,8 +1,11 @@
+
 import { Separator } from "@/components/ui/separator";
 import ECGAnalyzer from "@/components/ECGAnalyzer";
 import { Activity, Heart } from "lucide-react";
+
 const Index = () => {
-  return <div className="min-h-screen bg-[#070b16] text-white">
+  return (
+    <div className="min-h-screen bg-[#070b16] text-white">
       <header className="bg-[#0f1729] shadow-md border-b border-gray-800">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -15,8 +18,8 @@ const Index = () => {
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-gray-100 mb-2">Comprehensive ECG Analysis</h2>
-          <p className="dont mention the 5 models part , just mention gemini.">
-            Upload your ECG image to detect abnormalities using 5 advanced AI models including Gemini 2.5 Pro.
+          <p className="text-gray-400">
+            Upload your ECG image to detect abnormalities using advanced AI models.
             Our system provides a comprehensive analysis by combining specialized detection systems.
           </p>
           <Separator className="my-6 bg-gray-800" />
@@ -43,7 +46,7 @@ const Index = () => {
                 2. Multi-Model Analysis
               </h3>
               <p className="text-gray-400 text-sm">
-                Our system analyzes your ECG using 5 specialized AI models working in parallel, including Gemini 2.5 Pro
+                Our system analyzes your ECG using multiple specialized AI models working in parallel
               </p>
             </div>
             <div className="bg-[#0f1729] p-4 rounded-lg shadow-sm border border-gray-800">
@@ -62,10 +65,12 @@ const Index = () => {
       <footer className="bg-[#0f1729] mt-16 border-t border-gray-800">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500 text-sm">
-            Multi-Model ECG Analyzer © {new Date().getFullYear()} | Advanced ECG Analysis with Gemini AI
+            Multi-Model ECG Analyzer © {new Date().getFullYear()} | Advanced ECG Analysis with AI
           </p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

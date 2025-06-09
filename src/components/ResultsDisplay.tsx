@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,8 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { DetectionResult } from '@/utils/roboflowService';
 import { drawDetections } from '@/utils/imageUtils';
 import { consolidateResults, ConsolidatedResult } from '@/utils/analysisUtils';
-import { GeminiResult } from '@/utils/geminiService';
-import { Activity, Brain, Sparkles } from 'lucide-react';
+import { Activity, Brain } from 'lucide-react';
 
 interface ResultsDisplayProps {
   imageBase64: string | null;
@@ -16,7 +16,6 @@ interface ResultsDisplayProps {
     arrhythmiaDetection: DetectionResult | null;
     model7n51b: DetectionResult | null;
     modelVbbkz: DetectionResult | null;
-    geminiResult?: GeminiResult | null;
     hasError: boolean;
   };
 }
@@ -160,7 +159,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
   
   // No results to display
   if (!imageBase64 || (!results.ecgDetection && !results.arrhythmiaDetection && 
-      !results.model7n51b && !results.modelVbbkz && !results.geminiResult)) {
+      !results.model7n51b && !results.modelVbbkz)) {
     return null;
   }
   
@@ -189,32 +188,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Add Gemini Result Section */}
-        {results.geminiResult && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/20 rounded-lg">
-            <h3 className="text-lg font-medium text-purple-300 mb-2 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-400" />
-              Gemini 2.5 Pro Analysis
-            </h3>
-            <div className="flex items-center gap-3">
-              <Badge className={
-                results.geminiResult.confidence > 70 
-                  ? "bg-red-900/50 text-red-200 border-red-500/50" 
-                  : results.geminiResult.confidence > 40
-                    ? "bg-yellow-900/50 text-yellow-200 border-yellow-500/50"
-                    : "bg-green-900/50 text-green-200 border-green-500/50"
-              }>
-                {results.geminiResult.confidence}%
-              </Badge>
-              <span className="font-medium text-lg">{results.geminiResult.condition}</span>
-            </div>
-            <p className="text-sm text-gray-300 mt-2">
-              {results.geminiResult.explanation}
-            </p>
-          </div>
-        )}
-
-        {/* Add Consolidated Result Section */}
+        {/* Consolidated Result Section */}
         {consolidatedResult && (
           <div className="mb-6 p-4 bg-blue-900/20 border border-blue-500/20 rounded-lg">
             <h3 className="text-lg font-medium text-blue-300 mb-2 flex items-center gap-2">
@@ -245,7 +219,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
             <TabsTrigger value="detailed" className="data-[state=active]:bg-gray-700">Detailed Results</TabsTrigger>
           </TabsList>
           
-          {/* Rest of the code remains the same */}
           <TabsContent value="visual" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {results.ecgDetection && (

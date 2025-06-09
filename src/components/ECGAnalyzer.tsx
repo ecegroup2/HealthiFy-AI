@@ -9,18 +9,16 @@ import ResultsDisplay from './ResultsDisplay';
 import { fileToBase64 } from '@/utils/imageUtils';
 import { analyzeECG, CombinedResults, validateECGImage } from '@/utils/roboflowService';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { analyzeECGWithGemini } from '@/utils/geminiService';
 
 const ECGAnalyzer: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [results, setResults] = useState<CombinedResults & { geminiResult?: any }>({
+  const [results, setResults] = useState<CombinedResults>({
     ecgDetection: null,
     arrhythmiaDetection: null,
     model7n51b: null,
     modelVbbkz: null,
-    hasError: false,
-    geminiResult: null
+    hasError: false
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -40,8 +38,7 @@ const ECGAnalyzer: React.FC = () => {
         arrhythmiaDetection: null,
         model7n51b: null,
         modelVbbkz: null,
-        hasError: false,
-        geminiResult: null
+        hasError: false
       });
     } catch (error) {
       console.error("Error converting file to base64:", error);
@@ -74,17 +71,10 @@ const ECGAnalyzer: React.FC = () => {
       }
       
       // If validation passes, proceed with analysis
-      toast.info("Analyzing ECG image with 5 advanced AI models...");
+      toast.info("Analyzing ECG image with advanced AI models...");
       const analysisResults = await analyzeECG(imageBase64);
       
-      // Add Gemini analysis
-      toast.info("Consulting Gemini 2.5 Pro for comprehensive assessment...");
-      const geminiResult = await analyzeECGWithGemini(imageBase64, analysisResults);
-      
-      setResults({
-        ...analysisResults,
-        geminiResult
-      });
+      setResults(analysisResults);
       
       setActiveStep(3);
       toast.success("Analysis complete!");
