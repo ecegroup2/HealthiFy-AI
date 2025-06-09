@@ -9,7 +9,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Heart className="h-6 w-6 text-red-500" />
-            <span className="text-white">ECG Analysis</span>
+            <span className="text-white">HealthiFy AI</span>
           </h1>
         </div>
       </header>
