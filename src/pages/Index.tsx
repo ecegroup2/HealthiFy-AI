@@ -7,6 +7,10 @@ const Index = () => {
     <div className="min-h-screen bg-[#070b16] text-white">
       <header className="bg-[#0f1729] shadow-md border-b border-gray-800">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+          <div className="relative w-10 h-10 flex items-center justify-center">
+                <div className="absolute inset-0 border-2 border-rose-500 rounded-full opacity-20 animate-ping"></div>
+                <Heart className="h-6 w-6 text-rose-500" />
+            </div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Heart className="h-6 w-6 text-red-500" />
             <span className="text-white">HealthiFy AI</span>
