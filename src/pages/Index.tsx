@@ -12,7 +12,6 @@ const Index = () => {
                 <Heart className="h-6 w-6 text-rose-500" />
             </div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Heart className="h-6 w-6 text-red-500" />
             <span className="text-white">HealthiFy AI</span>
           </h1>
         </div>
