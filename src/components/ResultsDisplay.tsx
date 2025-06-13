@@ -176,7 +176,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
         <CardTitle className="text-xl flex items-center gap-2">
           <Activity className="h-5 w-5 text-blue-400" />
           Analysis Results
-          {totalAbnormalities > 0 ? (
+{/*           {totalAbnormalities > 0 ? (
             <Badge variant="destructive">
               {totalAbnormalities} {totalAbnormalities === 1 ? 'Abnormality' : 'Abnormalities'} Detected
             </Badge>
@@ -184,7 +184,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
               No Abnormalities
             </Badge>
-          )}
+          )} */}
         </CardTitle>
       </CardHeader>
       <CardContent>
