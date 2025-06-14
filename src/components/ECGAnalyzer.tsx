@@ -144,7 +144,7 @@ const ECGAnalyzer: React.FC = () => {
               <p className="text-gray-300 mb-1">Drag and drop your ECG image here</p>
               <p className="text-gray-500 text-sm mb-4">Or click to select a file</p>
               <p className="text-gray-500 text-xs mb-2">Supported formats: JPG, PNG, GIF (Max: 5MB)</p>
-              <div className="bg-gray-800 rounded-full px-4 py-1 text-xs text-gray-300">
+              <div className="bg-gray-800 rounded-full px-4 py-1 mb-4 text-xs text-gray-300">
                 Supports both labeled and non-labeled ECG formats
               </div>
               
