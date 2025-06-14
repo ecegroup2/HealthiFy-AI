@@ -271,7 +271,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
             </div>
           </TabsContent>
           
-          <TabsContent value="detailed" className="mt-4 space-y-6">
+          <TabsContent value="detailed" className="mt-4 mb-2 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {results.ecgDetection && (
                 <div>
