@@ -12,14 +12,9 @@ const Index = () => {
         <div className="absolute inset-0 border-2 border-rose-500 rounded-full opacity-20 animate-ping"></div>
         <Heart className="h-6 w-6 text-rose-500 z-10" />
       </div>
-      <div className="flex justify-between items-center">
         <h1 className="text-2xl sm:text-3xl font-bold text-white">
         HealthiFy AI
         </h1>
-        <button>
-          back
-        </button>
-      </div>
     </div>
   </div>
 </header>
