@@ -81,7 +81,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isAnalyzing 
   };
 
   return (
-    <Card className="w-full pt-4">
+    <Card className="w-full">
       <CardContent className="p-4">
         <input
           type="file"
