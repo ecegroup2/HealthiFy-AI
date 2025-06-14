@@ -350,7 +350,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
               )}
             </div>
             
-{/*             {totalAbnormalities > 0 && (
+            {totalAbnormalities > 0 && (
               <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/20 rounded-md">
                 <h3 className="text-lg font-medium text-yellow-300">Combined Analysis</h3>
                 <p className="text-yellow-200/80 mt-1">
@@ -362,7 +362,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ imageBase64, results })
                   ].filter(Boolean).join(', ')} models.
                 </p>
               </div>
-            )} */}
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>
