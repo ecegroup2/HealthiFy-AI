@@ -16,7 +16,11 @@ const Index = () => {
               <h1 className="text-2xl sm:text-3xl font-bold text-white">
                 HealthiFy AI
               </h1>
-              <button>back</button>
+              <button
+          className="h-[3rem] w-[15rem] rounded-full bg-gradient-to-r from-teal-500 to-blue-600 
+    text-white font-medium tracking-wide shadow-lg hover:shadow-xl hover:scale-105 
+    transition-all duration-300 flex items-center justify-center gap-2"
+          onClick={ window.open("https://ecegroup2.github.io/", "_blank");}>
             </div>
           </div>
         </div>
