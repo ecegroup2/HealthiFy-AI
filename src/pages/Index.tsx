@@ -68,12 +68,12 @@ const Index = () => {
             {/* Logo and Title */}
             <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-center sm:justify-start">
               <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
-              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white truncate">
-                HealthiFy AI
-              </h1>
                 <div className="absolute inset-0 border-2 border-rose-500 rounded-full opacity-20 animate-ping"></div>
                 <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-rose-500 z-10" />
               </div>
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white truncate">
+                HealthiFy AI
+              </h1>
             </div>
           </div>
         </div>
